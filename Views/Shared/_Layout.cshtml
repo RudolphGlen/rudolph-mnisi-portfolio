@@ -1,0 +1,54 @@
+﻿@* Every page shares this accessible navigation and footer. The page content
+   is inserted at RenderBody, so we only maintain the surrounding HTML once. *@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Rudolph Mnisi — IT, software development, and technical support. Professional portfolio based in Witbank, Mpumalanga, South Africa." />
+    <meta name="theme-color" content="#142b38" />
+    <title>@ViewData["Title"] | MyFirstWebsite</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="site-header">
+        <nav class="navigation shell" aria-label="Main navigation">
+            <a class="brand" asp-controller="Home" asp-action="Index" asp-fragment="home">
+                Rudolph Glen Mnisi
+            </a>
+            <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links" hidden>
+                <span>Menu</span><span aria-hidden="true">&#9776;</span>
+            </button>
+            @* MVC link helpers also take visitors back to these sections from the privacy page. *@
+            <div class="nav-links" id="nav-links">
+                <a asp-controller="Home" asp-action="Index" asp-fragment="home">Home</a>
+                <a asp-controller="Home" asp-action="Index" asp-fragment="about">About</a>
+                <a asp-controller="Home" asp-action="Index" asp-fragment="skills">Skills</a>
+                <a asp-controller="Home" asp-action="Index" asp-fragment="education">Education</a>
+                <a asp-controller="Home" asp-action="Index" asp-fragment="experience">Experience</a>
+                <a asp-controller="Home" asp-action="Index" asp-fragment="projects">Projects</a>
+                <a asp-controller="Home" asp-action="Index" asp-fragment="certifications">Certifications</a>
+                <a class="nav-contact" asp-controller="Home" asp-action="Index" asp-fragment="contact">Let’s talk <span aria-hidden="true">&#8599;</span></a>
+            </div>
+        </nav>
+    </header>
+    <main id="main-content" tabindex="-1">
+        @* Insert the current page inside the shared layout. *@
+        @RenderBody()
+    </main>
+    <footer class="site-footer">
+        <div class="shell footer-inner">
+            <div><a class="footer-brand" asp-controller="Home" asp-action="Index">MyFirstWebsite<span>.</span></a>
+                <p>Thoughtful work. Continuous growth.</p></div>
+            <div class="footer-meta"><span>© @DateTime.Now.Year MyFirstWebsite</span>
+                <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+                <a asp-controller="Home" asp-action="Index" asp-fragment="home">Back to top &#8593;</a></div>
+        </div>
+    </footer>
+    <script src="~/js/site.js" asp-append-version="true" defer></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+
