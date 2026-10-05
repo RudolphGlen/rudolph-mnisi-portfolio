@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Admin - Skills";
+}
+
+<section class="section section-tinted" aria-labelledby="management-heading">
+    <div class="shell">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">PORTFOLIO / ADMIN</p>
+                <h1 id="management-heading">Skills</h1>
+                <p class="hero-intro">Organize your technical skills and professional strengths.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="hero-greeting">Manage Skills</h2>
+            <p>Management tools are coming soon. Adding, editing, and deleting are not available yet.</p>
+            @* Disabled controls are visual placeholders only. *@
+            <div class="button-row">
+                <button class="button button-primary" type="button" disabled>Add</button>
+                <button class="button button-outline" type="button" disabled>Edit</button>
+                <button class="button button-outline" type="button" disabled>Delete</button>
+            </div>
+        </div>
+
+        <a class="text-link" asp-controller="Admin" asp-action="Index">&#8592; Back to Admin Dashboard</a>
+    </div>
+</section>

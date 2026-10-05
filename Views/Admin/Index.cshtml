@@ -1,0 +1,43 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<section class="section section-tinted" aria-labelledby="admin-heading">
+    <div class="shell">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">PORTFOLIO / ADMIN</p>
+                <h1 id="admin-heading">Admin Dashboard</h1>
+                <p class="hero-intro">Welcome to your portfolio dashboard. Your content management tools are coming soon.</p>
+            </div>
+        </div>
+
+        @* Static placeholders reuse the portfolio's existing responsive card styles. *@
+        <div class="two-columns">
+            <article class="card skill-card">
+                <span class="line-icon" aria-hidden="true">&lt;/&gt;</span>
+                <h2 class="hero-greeting">Projects</h2>
+                <p>A place to manage your portfolio projects and showcase your work.</p>
+                <a class="button button-outline" asp-controller="Admin" asp-action="Projects">Manage Projects</a>
+            </article>
+            <article class="card skill-card">
+                <span class="line-icon" aria-hidden="true">&#9671;</span>
+                <h2 class="hero-greeting">Certifications</h2>
+                <p>A place to manage your certifications and professional achievements.</p>
+                <a class="button button-outline" asp-controller="Admin" asp-action="Certifications">Manage Certifications</a>
+            </article>
+            <article class="card skill-card">
+                <span class="line-icon" aria-hidden="true">&#10003;</span>
+                <h2 class="hero-greeting">Skills</h2>
+                <p>A place to manage your technical skills and professional strengths.</p>
+                <a class="button button-outline" asp-controller="Admin" asp-action="Skills">Manage Skills</a>
+            </article>
+            <article class="card skill-card">
+                <span class="line-icon" aria-hidden="true">&#8599;</span>
+                <h2 class="hero-greeting">Experience</h2>
+                <p>A place to manage your work experience and career highlights.</p>
+                <a class="button button-outline" asp-controller="Admin" asp-action="Experience">Manage Experience</a>
+            </article>
+        </div>
+    </div>
+</section>
