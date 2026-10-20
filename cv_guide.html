@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rudolph Glen Mnisi - CV Website Architecture & Authentication Guide</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+            background: #f9f9f9;
+        }
+        .page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0 auto 20mm auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            page-break-after: always;
+            position: relative;
+        }
+        h1 { color: #1a365d; font-size: 26px; border-bottom: 3px solid #3182ce; padding-bottom: 10px; }
+        h2 { color: #2b6cb0; font-size: 20px; margin-top: 25px; }
+        h3 { color: #2c5282; font-size: 16px; }
+        p, li { font-size: 14px; }
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+        .diagram {
+            background: #ebf8ff;
+            border: 1px dashed #3182ce;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            text-align: center;
+            margin: 15px 0;
+            color: #2b6cb0;
+        }
+        .page-number {
+            position: absolute;
+            bottom: 15mm;
+            right: 20mm;
+            font-size: 12px;
+            color: #718096;
+        }
+        @media print {
+            body { background: none; padding: 0; }
+            .page { box-shadow: none; margin: 0; width: 100%; height: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE 1 -->
+    <div class="page">
+        <h1>Rudolph Glen Mnisi CV Website</h1>
+        <h2>Project Architecture & Authentication Guide</h2>
+       <p><strong>Author:</strong> Rudolph Glen Mnisi<br>
+           <strong>Date:</strong> October 13, 2026<br>
+           <strong>Tech Stack:</strong> ASP.NET Core MVC (.NET 9), C#, Entity Framework Core, SQLite, Visual Studio Code</p>
+        <h3>Page 1: System Architecture Overview</h3>
+        <p>Before implementing our database, the personal CV website operated purely on static views and a Resend contact form. To support a secure admin dashboard, we integrated <strong>ASP.NET Core Identity</strong> backed by a lightweight <strong>SQLite</strong> database.</p>
+
+        <div class="diagram">
+            [ Browser / Microsoft Edge ]<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼ (HTTP Request: /Admin/Login)<br>
+            [ Admin Controller ] ──(Verifies Password)──► [ SignInManager ]<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>
+            [ SQLite app.db ] ◄──(Entity Framework Core)──┘
+        </div>
+
+        <p><strong>Core Components:</strong></p>
+        <ul>
+            <li><strong>Admin Controller:</strong> Handles web requests for login and dashboard management.</li>
+            <li><strong>SignInManager:</strong> ASP.NET Core's built-in cryptographic security layer for validating credentials.</li>
+            <li><strong>SQLite (`app.db`):</strong> A serverless, self-contained database file storing encrypted user data locally.</li>
+        </ul>
+        <div class="page-number">Page 1 of 4</div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div class="page">
+        <h1>Database Setup & EF Core Configuration</h1>
+        <h3>Page 2: Connecting C# to SQLite</h3>
+        <p>Entity Framework Core (EF Core) acts as an Object-Relational Mapper (ORM), letting us write C# code instead of raw SQL queries to interact with our database.</p>
+
+        <h3>1. Connection String (`appsettings.json`)</h3>
+        <pre>{
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=app.db"
+  }
+}</pre>
+
+        <h3>2. Database Context (`Data/ApplicationDbContext.cs`)</h3>
+        <p>The context inherits from `IdentityDbContext`, automatically provisioning tables for Users, Roles, Claims, and Logins.</p>
+        <pre>using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
+namespace BeginnerMvc.Data
+{
+    public class ApplicationDbContext : IdentityDbContext
+    {
+        public ApplicationDbContext(DbContextOptions&lt;ApplicationDbContext&gt; options)
+            : base(options)
+        {
+        }
+    }
+}</pre>
+        <p>Migrations were then applied using terminal commands (`dotnet ef migrations add` and `dotnet ef database update`), successfully compiling the local binary file `app.db`.</p>
+        <div class="page-number">Page 2 of 4</div>
+    </div>
+
+    <!-- PAGE 3 -->
+    <div class="page">
+        <h1>Admin Credentials &amp; User Secrets</h1>
+        <h3>Page 3: Keeping local credentials out of source files</h3>
+        <p>The Admin account seeder reads its email and password from application configuration at runtime. For local development, provide these values with <strong>.NET User Secrets</strong> using the <code>dotnet user-secrets</code> command.</p>
+
+        <h3>Configuration keys</h3>
+        <ul>
+            <li><code>AdminSettings:Email</code></li>
+            <li><code>AdminSettings:Password</code></li>
+        </ul>
+        <p>Use <code>dotnet user-secrets set</code> to set each key on your development machine. Keep the actual values out of C# code, HTML guides, settings files, and source control. User Secrets are for local development; use your hosting provider's protected settings for a deployed site.</p>
+        <p>ASP.NET Core Identity hashes the password when it creates the account. The seeder needs the configured values only when it checks for or creates the initial Admin account.</p>
+        <div class="page-number">Page 3 of 4</div>
+    </div>
+
+    <!-- PAGE 4 -->
+    <div class="page">
+        <h1>Authentication & Future Roadmap</h1>
+        <h3>Page 4: Login Verification & Next Steps</h3>
+        <p>When you log into your admin dashboard, the following sequence occurs:</p>
+
+        <div class="diagram">
+            Login Form Input ──► SignInManager ──► Matches Hashed Password in SQLite ──► Issues Auth Cookie ──► Admin Dashboard
+        </div>
+
+        <h3>Current Authentication Setup:</h3>
+        <ul>
+            <li>The Admin login uses ASP.NET Core Identity.</li>
+            <li>Admin credentials are read from configuration keys supplied with .NET User Secrets during local development, not embedded in code or HTML.</li>
+            <li>The seeder checks for the initial Admin account and creates it only when it is missing.</li>
+        </ul>
+
+        <h3>Next Steps for Portfolio Development:</h3>
+        <ul>
+            <li>Secure admin controllers using the `[Authorize]` data annotation.</li>
+            <li>Build CRUD operations to manage public website projects, education, and skills dynamically from the dashboard.</li>
+        </ul>
+
+        <div class="page-number">Page 4 of 4</div>
+    </div>
+
+</body>
+</html>

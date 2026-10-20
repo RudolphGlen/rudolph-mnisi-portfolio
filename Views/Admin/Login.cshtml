@@ -2,30 +2,28 @@
     ViewData["Title"] = "Admin Login";
 }
 
-<section class="section section-tinted" aria-labelledby="login-heading">
+<section class="section section-tinted admin-area" aria-labelledby="login-heading">
     <div class="shell prose">
         <div class="section-heading">
             <div>
                 <p class="eyebrow">PORTFOLIO / ADMIN</p>
                 <h1 id="login-heading">Admin Login</h1>
-                <p class="hero-intro">Welcome to your portfolio administration area. Secure sign-in will be available soon.</p>
+                <p class="hero-intro">Sign in to your portfolio administration area.</p>
             </div>
         </div>
 
-        @* UI only: deliberately no form, submission, or credential handling.
-           Authentication will be added later; this button cannot grant access. *@
-        <div class="card" role="group" aria-labelledby="login-heading" aria-describedby="login-notice">
+        <form asp-controller="Admin" asp-action="Login" method="post" class="card admin-login-form" aria-labelledby="login-heading">
+            <div asp-validation-summary="ModelOnly" class="admin-validation" role="alert"></div>
             <div class="field">
-                <label for="admin-username">Email or username</label>
-                <input id="admin-username" type="text" placeholder="Enter your email or username" autocomplete="off" autocapitalize="none" spellcheck="false" />
+                <label for="userName">Email or username</label>
+                <input id="userName" name="userName" type="text" placeholder="Enter your email or username" autocomplete="username" autocapitalize="none" spellcheck="false" required />
             </div>
             <div class="field">
-                <label for="admin-password">Password</label>
-                <input id="admin-password" type="password" placeholder="Enter your password" autocomplete="off" />
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required />
             </div>
-            <p id="login-notice">This is a preview only. Authentication will be added later, and sign-in is currently unavailable.</p>
-            <button class="button button-primary" type="button" disabled aria-describedby="login-notice">Sign In</button>
-        </div>
+            <button class="button button-primary" type="submit">Sign In</button>
+        </form>
 
         <a class="text-link" asp-controller="Home" asp-action="Index">&#8592; Back to Home</a>
     </div>

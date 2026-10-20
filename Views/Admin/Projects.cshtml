@@ -1,27 +1,101 @@
+@model IEnumerable<Project>
 @{
     ViewData["Title"] = "Admin - Projects";
 }
 
-<section class="section section-tinted" aria-labelledby="management-heading">
+<section class="section section-tinted admin-area" aria-labelledby="management-heading">
     <div class="shell">
         <div class="section-heading">
             <div>
                 <p class="eyebrow">PORTFOLIO / ADMIN</p>
                 <h1 id="management-heading">Projects</h1>
-                <p class="hero-intro">Organize your portfolio projects and showcase your work.</p>
+                <p class="hero-intro">Manage the projects shown in your portfolio.</p>
             </div>
         </div>
 
-        <div class="card">
-            <h2 class="hero-greeting">Manage Projects</h2>
-            <p>Management tools are coming soon. Adding, editing, and deleting are not available yet.</p>
-            @* Disabled controls are visual placeholders only. *@
-            <div class="button-row">
-                <button class="button button-primary" type="button" disabled>Add</button>
-                <button class="button button-outline" type="button" disabled>Edit</button>
-                <button class="button button-outline" type="button" disabled>Delete</button>
-            </div>
-        </div>
+        <section class="card" aria-labelledby="new-project-heading">
+            <h2 id="new-project-heading">Add a project</h2>
+            <form asp-controller="Admin" asp-action="CreateProject" method="post" class="admin-entry-form">
+                @Html.AntiForgeryToken()
+                <div class="field">
+                    <label for="new-project-title">Title</label>
+                    <input id="new-project-title" name="Title" maxlength="150" required />
+                </div>
+                <div class="field">
+                    <label for="new-project-description">Description</label>
+                    <textarea id="new-project-description" name="Description" rows="4" maxlength="3000" required></textarea>
+                </div>
+                <div class="field">
+                    <label for="new-project-technologies">Technologies (comma-separated)</label>
+                    <input id="new-project-technologies" name="Technologies" maxlength="1000" required />
+                </div>
+                <div class="field">
+                    <label for="new-project-url">Project URL</label>
+                    <input id="new-project-url" name="ProjectUrl" type="url" maxlength="2048" />
+                </div>
+                <div class="field">
+                    <label for="new-project-github">GitHub URL</label>
+                    <input id="new-project-github" name="GithubUrl" type="url" maxlength="2048" />
+                </div>
+                <button class="button button-primary" type="submit">Add project</button>
+            </form>
+        </section>
+
+        <section class="card" aria-labelledby="projects-list-heading" style="margin-top:24px; overflow-x:auto">
+            <h2 id="projects-list-heading">Existing projects</h2>
+            <table class="admin-table" style="width:100%; border-collapse:collapse; text-align:left">
+                <thead>
+                    <tr>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Title</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Description</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Technologies</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Links</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="5" style="padding:12px">No projects have been added yet.</td></tr>
+                }
+                else
+                {
+                    @foreach (var project in Model)
+                    {
+                        <tr>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@project.Title</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line); max-width:320px">@project.Description</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@project.Technologies</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">
+                                @if (!string.IsNullOrWhiteSpace(project.ProjectUrl)) { <a href="@project.ProjectUrl" target="_blank" rel="noopener noreferrer">Project</a> }
+                                @if (!string.IsNullOrWhiteSpace(project.GithubUrl)) { <a href="@project.GithubUrl" target="_blank" rel="noopener noreferrer">GitHub</a> }
+                            </td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">
+                                <details>
+                                    <summary class="button button-outline">Edit</summary>
+                                    <form asp-controller="Admin" asp-action="EditProject" method="post" class="card" style="min-width:280px; margin-top:10px">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@project.Id" />
+                                        <div class="field"><label for="project-title-@project.Id">Title</label><input id="project-title-@project.Id" name="Title" value="@project.Title" maxlength="150" required /></div>
+                                        <div class="field"><label for="project-description-@project.Id">Description</label><textarea id="project-description-@project.Id" name="Description" rows="4" maxlength="3000" required>@project.Description</textarea></div>
+                                        <div class="field"><label for="project-technologies-@project.Id">Technologies</label><input id="project-technologies-@project.Id" name="Technologies" value="@project.Technologies" maxlength="1000" required /></div>
+                                        <div class="field"><label for="project-url-@project.Id">Project URL</label><input id="project-url-@project.Id" name="ProjectUrl" type="url" value="@project.ProjectUrl" maxlength="2048" /></div>
+                                        <div class="field"><label for="project-github-@project.Id">GitHub URL</label><input id="project-github-@project.Id" name="GithubUrl" type="url" value="@project.GithubUrl" maxlength="2048" /></div>
+                                        <button class="button button-primary" type="submit">Save changes</button>
+                                    </form>
+                                </details>
+                                <form asp-controller="Admin" asp-action="DeleteProject" method="post" style="margin-top:8px">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@project.Id" />
+                                    <button class="button button-outline" type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </section>
 
         <a class="text-link" asp-controller="Admin" asp-action="Index">&#8592; Back to Admin Dashboard</a>
     </div>

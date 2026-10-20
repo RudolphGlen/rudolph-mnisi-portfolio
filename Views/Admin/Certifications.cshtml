@@ -1,27 +1,83 @@
+@model IEnumerable<Certification>
 @{
     ViewData["Title"] = "Admin - Certifications";
 }
 
-<section class="section section-tinted" aria-labelledby="management-heading">
+<section class="section section-tinted admin-area" aria-labelledby="management-heading">
     <div class="shell">
         <div class="section-heading">
             <div>
                 <p class="eyebrow">PORTFOLIO / ADMIN</p>
                 <h1 id="management-heading">Certifications</h1>
-                <p class="hero-intro">Keep track of your certifications and professional achievements.</p>
+                <p class="hero-intro">Manage certifications and professional achievements.</p>
             </div>
         </div>
 
-        <div class="card">
-            <h2 class="hero-greeting">Manage Certifications</h2>
-            <p>Management tools are coming soon. Adding, editing, and deleting are not available yet.</p>
-            @* Disabled controls are visual placeholders only. *@
-            <div class="button-row">
-                <button class="button button-primary" type="button" disabled>Add</button>
-                <button class="button button-outline" type="button" disabled>Edit</button>
-                <button class="button button-outline" type="button" disabled>Delete</button>
-            </div>
-        </div>
+        <section class="card" aria-labelledby="new-certification-heading">
+            <h2 id="new-certification-heading">Add a certification</h2>
+            <form asp-controller="Admin" asp-action="CreateCertification" method="post" class="admin-entry-form">
+                @Html.AntiForgeryToken()
+                <div class="field"><label for="new-certification-title">Title</label><input id="new-certification-title" name="Title" maxlength="200" required /></div>
+                <div class="field"><label for="new-certification-issuer">Issuer</label><input id="new-certification-issuer" name="Issuer" maxlength="200" required /></div>
+                <div class="field"><label for="new-certification-date">Date earned</label><input id="new-certification-date" name="DateEarned" type="date" required /></div>
+                <div class="field"><label for="new-certification-url">Certificate URL</label><input id="new-certification-url" name="CertificateUrl" type="url" maxlength="2048" /></div>
+                <button class="button button-primary" type="submit">Add certification</button>
+            </form>
+        </section>
+
+        <section class="card" aria-labelledby="certifications-list-heading" style="margin-top:24px; overflow-x:auto">
+            <h2 id="certifications-list-heading">Existing certifications</h2>
+            <table class="admin-table" style="width:100%; border-collapse:collapse; text-align:left">
+                <thead>
+                    <tr>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Title</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Issuer</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Date earned</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Certificate</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="5" style="padding:12px">No certifications have been added yet.</td></tr>
+                }
+                else
+                {
+                    @foreach (var certification in Model)
+                    {
+                        <tr>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@certification.Title</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@certification.Issuer</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@certification.DateEarned.ToString("yyyy-MM-dd")</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">
+                                @if (!string.IsNullOrWhiteSpace(certification.CertificateUrl)) { <a href="@certification.CertificateUrl" target="_blank" rel="noopener noreferrer">View certificate</a> }
+                            </td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">
+                                <details>
+                                    <summary class="button button-outline">Edit</summary>
+                                    <form asp-controller="Admin" asp-action="EditCertification" method="post" class="card" style="min-width:280px; margin-top:10px">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@certification.Id" />
+                                        <div class="field"><label for="certification-title-@certification.Id">Title</label><input id="certification-title-@certification.Id" name="Title" value="@certification.Title" maxlength="200" required /></div>
+                                        <div class="field"><label for="certification-issuer-@certification.Id">Issuer</label><input id="certification-issuer-@certification.Id" name="Issuer" value="@certification.Issuer" maxlength="200" required /></div>
+                                        <div class="field"><label for="certification-date-@certification.Id">Date earned</label><input id="certification-date-@certification.Id" name="DateEarned" type="date" value="@certification.DateEarned.ToString("yyyy-MM-dd")" required /></div>
+                                        <div class="field"><label for="certification-url-@certification.Id">Certificate URL</label><input id="certification-url-@certification.Id" name="CertificateUrl" type="url" value="@certification.CertificateUrl" maxlength="2048" /></div>
+                                        <button class="button button-primary" type="submit">Save changes</button>
+                                    </form>
+                                </details>
+                                <form asp-controller="Admin" asp-action="DeleteCertification" method="post" style="margin-top:8px">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@certification.Id" />
+                                    <button class="button button-outline" type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </section>
 
         <a class="text-link" asp-controller="Admin" asp-action="Index">&#8592; Back to Admin Dashboard</a>
     </div>

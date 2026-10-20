@@ -2,7 +2,7 @@
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<section class="section section-tinted" aria-labelledby="admin-heading">
+<section class="section section-tinted admin-area" aria-labelledby="admin-heading">
     <div class="shell">
         <div class="section-heading">
             <div>
@@ -10,6 +10,10 @@
                 <h1 id="admin-heading">Admin Dashboard</h1>
                 <p class="hero-intro">Welcome to your portfolio dashboard. Your content management tools are coming soon.</p>
             </div>
+            <form asp-controller="Admin" asp-action="Logout" method="post" class="admin-logout-form">
+                @Html.AntiForgeryToken()
+                <button class="button button-outline" type="submit">Log out</button>
+            </form>
         </div>
 
         @* Static placeholders reuse the portfolio's existing responsive card styles. *@

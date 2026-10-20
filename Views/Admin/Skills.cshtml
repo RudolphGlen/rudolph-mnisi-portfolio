@@ -1,27 +1,94 @@
+@model IEnumerable<Skill>
 @{
     ViewData["Title"] = "Admin - Skills";
 }
 
-<section class="section section-tinted" aria-labelledby="management-heading">
+<section class="section section-tinted admin-area" aria-labelledby="management-heading">
     <div class="shell">
         <div class="section-heading">
             <div>
                 <p class="eyebrow">PORTFOLIO / ADMIN</p>
                 <h1 id="management-heading">Skills</h1>
-                <p class="hero-intro">Organize your technical skills and professional strengths.</p>
+                <p class="hero-intro">Manage technical skills and professional strengths.</p>
             </div>
         </div>
 
-        <div class="card">
-            <h2 class="hero-greeting">Manage Skills</h2>
-            <p>Management tools are coming soon. Adding, editing, and deleting are not available yet.</p>
-            @* Disabled controls are visual placeholders only. *@
-            <div class="button-row">
-                <button class="button button-primary" type="button" disabled>Add</button>
-                <button class="button button-outline" type="button" disabled>Edit</button>
-                <button class="button button-outline" type="button" disabled>Delete</button>
-            </div>
-        </div>
+        <section class="card" aria-labelledby="new-skill-heading">
+            <h2 id="new-skill-heading">Add a skill</h2>
+            <form asp-controller="Admin" asp-action="CreateSkill" method="post" class="admin-entry-form">
+                @Html.AntiForgeryToken()
+                <div class="field"><label for="new-skill-name">Name</label><input id="new-skill-name" name="Name" maxlength="100" required /></div>
+                <div class="field">
+                    <label for="new-skill-category">Category</label>
+                    <select id="new-skill-category" name="Category" required>
+                        <option value="">Select a category</option>
+                        <option value="Frontend">Frontend</option>
+                        <option value="Backend">Backend</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="new-skill-level">Proficiency level</label>
+                    <select id="new-skill-level" name="ProficiencyLevel">
+                        <option value="Not specified">Not specified</option>
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                    </select>
+                </div>
+                <button class="button button-primary" type="submit">Add skill</button>
+            </form>
+        </section>
+
+        <section class="card" aria-labelledby="skills-list-heading" style="margin-top:24px; overflow-x:auto">
+            <h2 id="skills-list-heading">Existing skills</h2>
+            <table class="admin-table" style="width:100%; border-collapse:collapse; text-align:left">
+                <thead>
+                    <tr>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Name</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Category</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Proficiency</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="4" style="padding:12px">No skills have been added yet.</td></tr>
+                }
+                else
+                {
+                    @foreach (var skill in Model)
+                    {
+                        <tr>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@skill.Name</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@skill.Category</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@(!string.IsNullOrWhiteSpace(skill.ProficiencyLevel) ? skill.ProficiencyLevel : "Not specified")</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">
+                                <details>
+                                    <summary class="button button-outline">Edit</summary>
+                                    <form asp-controller="Admin" asp-action="EditSkill" method="post" class="card" style="min-width:260px; margin-top:10px">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@skill.Id" />
+                                        <div class="field"><label for="skill-name-@skill.Id">Name</label><input id="skill-name-@skill.Id" name="Name" value="@skill.Name" maxlength="100" required /></div>
+                                        <div class="field"><label for="skill-category-@skill.Id">Category</label><input id="skill-category-@skill.Id" name="Category" value="@skill.Category" maxlength="50" required /></div>
+                                        <div class="field"><label for="skill-level-@skill.Id">Proficiency level</label><input id="skill-level-@skill.Id" name="ProficiencyLevel" value="@(string.IsNullOrWhiteSpace(skill.ProficiencyLevel) ? "Not specified" : skill.ProficiencyLevel)" maxlength="50" required /></div>
+                                        <button class="button button-primary" type="submit">Save changes</button>
+                                    </form>
+                                </details>
+                                <form asp-controller="Admin" asp-action="DeleteSkill" method="post" style="margin-top:8px">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@skill.Id" />
+                                    <button class="button button-outline" type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </section>
 
         <a class="text-link" asp-controller="Admin" asp-action="Index">&#8592; Back to Admin Dashboard</a>
     </div>

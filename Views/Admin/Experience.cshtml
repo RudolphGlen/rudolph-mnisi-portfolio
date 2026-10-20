@@ -1,27 +1,99 @@
+@model IEnumerable<Experience>
 @{
     ViewData["Title"] = "Admin - Experience";
 }
 
-<section class="section section-tinted" aria-labelledby="management-heading">
+<section class="section section-tinted admin-area" aria-labelledby="management-heading">
     <div class="shell">
         <div class="section-heading">
             <div>
                 <p class="eyebrow">PORTFOLIO / ADMIN</p>
                 <h1 id="management-heading">Experience</h1>
-                <p class="hero-intro">Keep track of your work experience and career highlights.</p>
+                <p class="hero-intro">Manage work experience and career highlights.</p>
             </div>
         </div>
 
-        <div class="card">
-            <h2 class="hero-greeting">Manage Experience</h2>
-            <p>Management tools are coming soon. Adding, editing, and deleting are not available yet.</p>
-            @* Disabled controls are visual placeholders only. *@
-            <div class="button-row">
-                <button class="button button-primary" type="button" disabled>Add</button>
-                <button class="button button-outline" type="button" disabled>Edit</button>
-                <button class="button button-outline" type="button" disabled>Delete</button>
-            </div>
-        </div>
+        <section class="card" aria-labelledby="new-experience-heading">
+            <h2 id="new-experience-heading">Add experience</h2>
+            <form asp-controller="Admin" asp-action="CreateExperience" method="post" class="admin-entry-form">
+                @Html.AntiForgeryToken()
+                <div class="field"><label for="new-experience-company">Company</label><input id="new-experience-company" name="Company" maxlength="150" required /></div>
+                <div class="field"><label for="new-experience-role">Role</label><input id="new-experience-role" name="Role" maxlength="150" required /></div>
+                <div class="field"><label for="new-experience-start">Start date</label><input id="new-experience-start" name="StartDate" type="date" required /></div>
+                <div class="field"><label for="new-experience-end">End date (leave blank if current)</label><input id="new-experience-end" name="EndDate" type="date" /></div>
+                <div class="field"><label for="new-experience-description">Description</label><textarea id="new-experience-description" name="Description" rows="4" maxlength="3000" required></textarea></div>
+                <div class="field">
+                    <label for="new-experience-current">Current role?</label>
+                    <select id="new-experience-current" name="IsCurrentRole">
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
+                    </select>
+                </div>
+                <button class="button button-primary" type="submit">Add experience</button>
+            </form>
+        </section>
+
+        <section class="card" aria-labelledby="experience-list-heading" style="margin-top:24px; overflow-x:auto">
+            <h2 id="experience-list-heading">Existing experience</h2>
+            <table class="admin-table" style="width:100%; border-collapse:collapse; text-align:left">
+                <thead>
+                    <tr>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Company</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Role</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Dates</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Description</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Current role</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" style="padding:12px">No experience records have been added yet.</td></tr>
+                }
+                else
+                {
+                    @foreach (var experience in Model)
+                    {
+                        <tr>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@experience.Company</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@experience.Role</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@experience.StartDate.ToString("yyyy-MM-dd") – @(experience.EndDate?.ToString("yyyy-MM-dd") ?? "Present")</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line); max-width:320px">@experience.Description</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@(experience.IsCurrentRole ? "Yes" : "No")</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">
+                                <details>
+                                    <summary class="button button-outline">Edit</summary>
+                                    <form asp-controller="Admin" asp-action="EditExperience" method="post" class="card" style="min-width:280px; margin-top:10px">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@experience.Id" />
+                                        <div class="field"><label for="experience-company-@experience.Id">Company</label><input id="experience-company-@experience.Id" name="Company" value="@experience.Company" maxlength="150" required /></div>
+                                        <div class="field"><label for="experience-role-@experience.Id">Role</label><input id="experience-role-@experience.Id" name="Role" value="@experience.Role" maxlength="150" required /></div>
+                                        <div class="field"><label for="experience-start-@experience.Id">Start date</label><input id="experience-start-@experience.Id" name="StartDate" type="date" value="@experience.StartDate.ToString("yyyy-MM-dd")" required /></div>
+                                        <div class="field"><label for="experience-end-@experience.Id">End date</label><input id="experience-end-@experience.Id" name="EndDate" type="date" value="@experience.EndDate?.ToString("yyyy-MM-dd")" /></div>
+                                        <div class="field"><label for="experience-description-@experience.Id">Description</label><textarea id="experience-description-@experience.Id" name="Description" rows="4" maxlength="3000" required>@experience.Description</textarea></div>
+                                        <div class="field">
+                                            <label for="experience-current-@experience.Id">Current role?</label>
+                                            <select id="experience-current-@experience.Id" name="IsCurrentRole">
+                                                <option value="false" selected="@(!experience.IsCurrentRole)">No</option>
+                                                <option value="true" selected="@experience.IsCurrentRole">Yes</option>
+                                            </select>
+                                        </div>
+                                        <button class="button button-primary" type="submit">Save changes</button>
+                                    </form>
+                                </details>
+                                <form asp-controller="Admin" asp-action="DeleteExperience" method="post" style="margin-top:8px">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@experience.Id" />
+                                    <button class="button button-outline" type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </section>
 
         <a class="text-link" asp-controller="Admin" asp-action="Index">&#8592; Back to Admin Dashboard</a>
     </div>

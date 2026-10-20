@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using BeginnerMvc.Data;
 using BeginnerMvc.Models;
 using BeginnerMvc.Services;
 
@@ -9,12 +11,14 @@ public class HomeController : Controller
 {
     private readonly IEmailService _emailService;
     private readonly ILogger<HomeController> _logger;
+    private readonly ApplicationDbContext _dbContext;
 
     // ASP.NET Core supplies these dependencies; we do not create a provider here.
-    public HomeController(IEmailService emailService, ILogger<HomeController> logger)
+    public HomeController(IEmailService emailService, ILogger<HomeController> logger, ApplicationDbContext dbContext)
     {
         _emailService = emailService;
         _logger = logger;
+        _dbContext = dbContext;
     }
 
     [HttpPost]
@@ -26,7 +30,7 @@ public class HomeController : Controller
         // Only bind the four contact fields. Invalid input returns the page with
         // the visitor's entries and MVC's validation messages still available.
         if (!ModelState.IsValid)
-            return View("Index", new HomeViewModel { Contact = contact });
+            return View("Index", await BuildHomeViewModelAsync(contact, cancellationToken));
 
         try
         {
@@ -42,7 +46,7 @@ public class HomeController : Controller
             // provider diagnostics separately, and only in Development mode.
             _logger.LogError("Contact form processing failed.");
             ModelState.AddModelError("", "We could not process your message. Please try again later.");
-            return View("Index", new HomeViewModel { Contact = contact });
+            return View("Index", await BuildHomeViewModelAsync(contact, cancellationToken));
         }
 
         // TempData carries a one-time message across the redirect. Redirecting
@@ -52,10 +56,23 @@ public class HomeController : Controller
     }
 
     // Prepare the page's information, then send it to Views/Home/Index.cshtml.
-    public IActionResult Index()
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        var model = new HomeViewModel();
-        return View(model);
+        return View(await BuildHomeViewModelAsync(null, cancellationToken));
+    }
+
+    private async Task<HomeViewModel> BuildHomeViewModelAsync(
+        ContactFormViewModel? contact,
+        CancellationToken cancellationToken)
+    {
+        return new HomeViewModel
+        {
+            Contact = contact ?? new ContactFormViewModel(),
+            Projects = await _dbContext.Projects.AsNoTracking().OrderBy(item => item.Title).ToListAsync(cancellationToken),
+            Skills = await _dbContext.Skills.AsNoTracking().OrderBy(item => item.Category).ThenBy(item => item.Name).ToListAsync(cancellationToken),
+            Experiences = await _dbContext.Experiences.AsNoTracking().OrderByDescending(item => item.StartDate).ToListAsync(cancellationToken),
+            Certifications = await _dbContext.Certifications.AsNoTracking().OrderByDescending(item => item.DateEarned).ToListAsync(cancellationToken)
+        };
     }
 
     // MVC uses this method's name to find Views/Home/Privacy.cshtml.
