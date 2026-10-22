@@ -334,4 +334,113 @@ public class AdminController : Controller
         await _dbContext.SaveChangesAsync(cancellationToken);
         return RedirectToAction(nameof(Experience));
     }
+
+    // Load the single profile record that supplies the public Home, About, and Contact sections.
+    [HttpGet]
+    public async Task<IActionResult> Profile(CancellationToken cancellationToken)
+    {
+        var profile = await _dbContext.SiteProfiles.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == SiteProfile.DefaultId, cancellationToken);
+        return profile is null ? NotFound() : View(profile);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateProfile(
+        [Bind("Name,Initials,ProfessionalTitle,Introduction,Summary,AboutMore,Email,Phone,PhoneLink,ContactLocation,Location,Availability,ProfileImageUrl,CvUrl")]
+        SiteProfile submittedProfile,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+            return View("Profile", submittedProfile);
+
+        var profile = await _dbContext.SiteProfiles
+            .SingleOrDefaultAsync(item => item.Id == SiteProfile.DefaultId, cancellationToken);
+        if (profile is null)
+            return NotFound();
+
+        // Copy only editable public fields; the database key is never accepted from the form.
+        profile.Name = submittedProfile.Name;
+        profile.Initials = submittedProfile.Initials;
+        profile.ProfessionalTitle = submittedProfile.ProfessionalTitle;
+        profile.Introduction = submittedProfile.Introduction;
+        profile.Summary = submittedProfile.Summary;
+        profile.AboutMore = submittedProfile.AboutMore;
+        profile.Email = submittedProfile.Email;
+        profile.Phone = submittedProfile.Phone;
+        profile.PhoneLink = submittedProfile.PhoneLink;
+        profile.ContactLocation = submittedProfile.ContactLocation;
+        profile.Location = submittedProfile.Location;
+        profile.Availability = submittedProfile.Availability;
+        profile.ProfileImageUrl = submittedProfile.ProfileImageUrl;
+        profile.CvUrl = submittedProfile.CvUrl;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        TempData["AdminNotice"] = "Profile details saved.";
+        return RedirectToAction(nameof(Profile));
+    }
+
+    // List education records in the same order they appear in the public portfolio.
+    [HttpGet]
+    public async Task<IActionResult> Education(CancellationToken cancellationToken)
+    {
+        var education = await _dbContext.Education.AsNoTracking()
+            .OrderBy(item => item.DisplayOrder)
+            .ThenBy(item => item.Id)
+            .ToListAsync(cancellationToken);
+        return View(education);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateEducation(
+        [Bind("Qualification,Institution,Dates,Description,DisplayOrder")] Education education,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        await _dbContext.Education.AddAsync(education, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return RedirectToAction(nameof(Education));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditEducation(
+        int id,
+        [Bind("Qualification,Institution,Dates,Description,DisplayOrder")] Education submittedEducation,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var education = await _dbContext.Education
+            .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (education is null)
+            return NotFound();
+
+        education.Qualification = submittedEducation.Qualification;
+        education.Institution = submittedEducation.Institution;
+        education.Dates = submittedEducation.Dates;
+        education.Description = submittedEducation.Description;
+        education.DisplayOrder = submittedEducation.DisplayOrder;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return RedirectToAction(nameof(Education));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteEducation(int id, CancellationToken cancellationToken)
+    {
+        var education = await _dbContext.Education
+            .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (education is null)
+            return NotFound();
+
+        _dbContext.Education.Remove(education);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return RedirectToAction(nameof(Education));
+    }
 }

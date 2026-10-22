@@ -12,6 +12,8 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<Skill> Skills { get; set; } = null!;
     public DbSet<Experience> Experiences { get; set; } = null!;
     public DbSet<Certification> Certifications { get; set; } = null!;
+    public DbSet<Education> Education { get; set; } = null!;
+    public DbSet<SiteProfile> SiteProfiles { get; set; } = null!;
 
     // Receive the database provider and options configured by dependency injection.
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)

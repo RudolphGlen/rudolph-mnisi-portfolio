@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using BeginnerMvc.Data;
 using BeginnerMvc.Models;
@@ -22,11 +23,19 @@ public class HomeController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting("ContactForm")]
     [ValidateAntiForgeryToken] // Reject submissions without the form's security token.
     public async Task<IActionResult> Contact(
         [Bind(Prefix = "Contact")] ContactFormViewModel contact,
         CancellationToken cancellationToken)
     {
+        // Silently accept the page flow but discard submissions that fill the hidden honeypot.
+        if (!string.IsNullOrWhiteSpace(contact.Website))
+        {
+            TempData["ContactSuccess"] = "Thank you for getting in touch. Your message has been sent successfully. I will respond as soon as possible.";
+            return RedirectToAction(nameof(Index), "Home", null, "contact");
+        }
+
         // Only bind the four contact fields. Invalid input returns the page with
         // the visitor's entries and MVC's validation messages still available.
         if (!ModelState.IsValid)
@@ -68,6 +77,13 @@ public class HomeController : Controller
         return new HomeViewModel
         {
             Contact = contact ?? new ContactFormViewModel(),
+            Profile = await _dbContext.SiteProfiles.AsNoTracking()
+                .SingleOrDefaultAsync(profile => profile.Id == SiteProfile.DefaultId, cancellationToken)
+                ?? new SiteProfile(),
+            Education = await _dbContext.Education.AsNoTracking()
+                .OrderBy(item => item.DisplayOrder)
+                .ThenBy(item => item.Id)
+                .ToListAsync(cancellationToken),
             Projects = await _dbContext.Projects.AsNoTracking().OrderBy(item => item.Title).ToListAsync(cancellationToken),
             Skills = await _dbContext.Skills.AsNoTracking().OrderBy(item => item.Category).ThenBy(item => item.Name).ToListAsync(cancellationToken),
             Experiences = await _dbContext.Experiences.AsNoTracking().OrderByDescending(item => item.StartDate).ToListAsync(cancellationToken),

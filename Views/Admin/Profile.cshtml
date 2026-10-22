@@ -1,0 +1,52 @@
+@model SiteProfile
+@{
+    ViewData["Title"] = "Admin - Profile";
+}
+
+<section class="section section-tinted admin-area" aria-labelledby="profile-heading">
+    <div class="shell">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">PORTFOLIO / ADMIN</p>
+                <h1 id="profile-heading">Profile and contact details</h1>
+                <p class="hero-intro">These fields appear in your public Home, About, and Contact sections.</p>
+            </div>
+        </div>
+
+        @if (TempData["AdminNotice"] is string notice)
+        {
+            <p class="form-status" role="status">@notice</p>
+        }
+
+        <form asp-controller="Admin" asp-action="UpdateProfile" method="post" class="card admin-entry-form">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="admin-validation" role="alert"></div>
+
+            <h2>Home page</h2>
+            <div class="field"><label asp-for="Name">Name</label><input asp-for="Name" maxlength="120" required /></div>
+            <div class="field"><label asp-for="Initials">Initials shown when no profile photo is used</label><input asp-for="Initials" maxlength="10" required /></div>
+            <div class="field"><label asp-for="ProfessionalTitle">Professional title</label><input asp-for="ProfessionalTitle" maxlength="160" required /></div>
+            <div class="field"><label asp-for="Introduction">Short introduction</label><textarea asp-for="Introduction" rows="3" maxlength="1000" required></textarea></div>
+            <div class="field"><label asp-for="Availability">Availability label</label><input asp-for="Availability" maxlength="100" /></div>
+            <div class="field"><label asp-for="Location">Home page location</label><input asp-for="Location" maxlength="160" /></div>
+
+            <h2>About section</h2>
+            <div class="field"><label asp-for="Summary">About summary</label><textarea asp-for="Summary" rows="5" maxlength="3000" required></textarea></div>
+            <div class="field"><label asp-for="AboutMore">Additional About text</label><textarea asp-for="AboutMore" rows="5" maxlength="3000" required></textarea></div>
+
+            <h2>Contact section</h2>
+            <div class="field"><label asp-for="Email">Public email</label><input asp-for="Email" type="email" maxlength="254" /></div>
+            <div class="field"><label asp-for="Phone">Phone display text</label><input asp-for="Phone" maxlength="40" /></div>
+            <div class="field"><label asp-for="PhoneLink">Phone link number</label><input asp-for="PhoneLink" maxlength="40" /><small>Use an international number, such as +27712034198, without spaces.</small></div>
+            <div class="field"><label asp-for="ContactLocation">Contact section location</label><input asp-for="ContactLocation" maxlength="160" /></div>
+
+            <h2>Photo and CV links</h2>
+            <div class="field"><label asp-for="ProfileImageUrl">Profile image path or URL</label><input asp-for="ProfileImageUrl" maxlength="2048" /><small>For a site image, use a public path such as /images/profile.jpg. Leave blank to show your initials.</small></div>
+            <div class="field"><label asp-for="CvUrl">CV file path or URL</label><input asp-for="CvUrl" maxlength="2048" /><small>Use the path to the CV file in wwwroot, such as /documents/my-cv.pdf.</small></div>
+
+            <button class="button button-primary" type="submit">Save profile</button>
+        </form>
+
+        <a class="text-link" asp-controller="Admin" asp-action="Index">&#8592; Back to Admin Dashboard</a>
+    </div>
+</section>

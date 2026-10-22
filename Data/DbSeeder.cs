@@ -1,16 +1,18 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using BeginnerMvc.Models;
 
 namespace BeginnerMvc.Data;
 
 /// <summary>
-/// Creates the initial administrator account when it is missing from the Identity store.
+/// Seeds the initial administrator and the starting profile and education data when missing.
 /// </summary>
 public static class DbSeeder
 {
     /// <summary>
-    /// Uses the application's registered UserManager to find or create the admin user.
+    /// Uses the application's registered managers and database context to seed startup data.
     /// </summary>
     public static async Task SeedAdminAsync(IServiceProvider serviceProvider, IConfiguration configuration)
     {
@@ -87,5 +89,34 @@ public static class DbSeeder
                 throw new InvalidOperationException($"Could not assign the admin user to the Admin role: {errors}");
             }
         }
+
+        // Move the existing public profile defaults into the database on first startup.
+        var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
+        if (!await dbContext.SiteProfiles.AnyAsync())
+        {
+            await dbContext.SiteProfiles.AddAsync(new SiteProfile());
+        }
+
+        // Preserve the current education cards when the new table is first created.
+        if (!await dbContext.Education.AnyAsync())
+        {
+            await dbContext.Education.AddRangeAsync(
+                new Education
+                {
+                    Qualification = "National Diploma in ICT",
+                    Institution = "Tshwane University of Technology",
+                    Dates = "Completed: February 2025",
+                    DisplayOrder = 1
+                },
+                new Education
+                {
+                    Qualification = "Matric",
+                    Institution = "Shanke High School",
+                    Dates = "Completed: 2017",
+                    DisplayOrder = 2
+                });
+        }
+
+        await dbContext.SaveChangesAsync();
     }
 }

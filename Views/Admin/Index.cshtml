@@ -8,7 +8,7 @@
             <div>
                 <p class="eyebrow">PORTFOLIO / ADMIN</p>
                 <h1 id="admin-heading">Admin Dashboard</h1>
-                <p class="hero-intro">Welcome to your portfolio dashboard. Your content management tools are coming soon.</p>
+                <p class="hero-intro">Manage the information and sections shown on your public portfolio.</p>
             </div>
             <form asp-controller="Admin" asp-action="Logout" method="post" class="admin-logout-form">
                 @Html.AntiForgeryToken()
@@ -41,6 +41,18 @@
                 <h2 class="hero-greeting">Experience</h2>
                 <p>A place to manage your work experience and career highlights.</p>
                 <a class="button button-outline" asp-controller="Admin" asp-action="Experience">Manage Experience</a>
+            </article>
+            <article class="card skill-card">
+                <span class="line-icon" aria-hidden="true">&#9673;</span>
+                <h2 class="hero-greeting">Profile</h2>
+                <p>Update your name, introduction, About text, contact details, and download links.</p>
+                <a class="button button-outline" asp-controller="Admin" asp-action="Profile">Edit Profile</a>
+            </article>
+            <article class="card skill-card">
+                <span class="line-icon" aria-hidden="true">&#9636;</span>
+                <h2 class="hero-greeting">Education</h2>
+                <p>Add, edit, remove, and reorder your education entries.</p>
+                <a class="button button-outline" asp-controller="Admin" asp-action="Education">Manage Education</a>
             </article>
         </div>
     </div>

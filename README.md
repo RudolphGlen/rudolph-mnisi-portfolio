@@ -4,7 +4,7 @@ This is a .NET 9 ASP.NET Core MVC website. It includes Home, About, Skills, Educ
 
 ## Run it
 
-The app uses SQLite for Identity and portfolio content. On first start it applies EF Core migrations and creates the initial Admin account. Configure the account once with .NET User Secrets before starting the app. From the project folder, run:
+The app uses SQLite for Identity and portfolio content. On first start it applies EF Core migrations, creates the initial Admin account, and adds the current profile and education entries if they are not already in the database. Configure the account once with .NET User Secrets before starting the app. From the project folder, run:
 
 ```powershell
 dotnet user-secrets set "AdminSettings:Email" "you@example.com"
@@ -13,7 +13,7 @@ dotnet build
 dotnet run --launch-profile http
 ```
 
-Replace the sample email and password with your own. User Secrets are stored outside the repository and are for local development. For a hosted deployment, provide `AdminSettings__Email` and `AdminSettings__Password` through the hosting provider's secret configuration. The password is used only to create the initial account; changing that setting later does not reset an existing account's password.
+Replace the sample email and password with your own. User Secrets are stored outside the repository and are for local development. Hosting setup is covered separately in a lesson project. The password is used only to create the initial account; changing that setting later does not reset an existing account's password.
 
 The build command checks the code. The run command starts the web server. Leave that terminal open, then visit **http://localhost:5176** in a browser. Sign in at **/Admin/Login**. Press **Ctrl+C** in the server's terminal to stop it. After five failed sign-in attempts, the admin account is locked for five minutes.
 
@@ -25,32 +25,23 @@ Optional HTTPS: run `dotnet dev-certs https --trust` and accept the Windows cert
 
 ## Update your professional details
 
-**Start with Models/HomeViewModel.cs.** It contains Rudolph Mnisi's supplied professional information: IT, software development, technical support, InvesthooIT experience (2022–2023), the supplied skills, and Witbank, Mpumalanga, South Africa. Search for **PLACEHOLDER** to find missing details. Education, project, certification, email, and phone details have not been provided; the website does not invent them.
-
-- Update Name, Initials, ProfessionalTitle, Introduction, Summary, and AboutMore only with confirmed information.
-- Add your public professional Email, Phone, and PhoneLink (digits with country code) when ready. Empty values display placeholders without clickable contact links. Keep Location limited to Witbank, Mpumalanga, South Africa.
-- The skill lists contain only your supplied skills. Add other skills only when confirmed.
-- Edit the Education, Experience, Projects, and Certifications lists. Copy an existing item to add another entry; keep commas between entries.
-- Keep text inside quotation marks. To include a quotation mark inside text, write \".
-- Remove the relevant placeholder notices in Views/Home/Index.cshtml only after providing real details. Keep the contact form's demo notice until real delivery is implemented.
+Sign in at **/Admin/Login** and use the dashboard to edit public content. **Profile** manages the Home introduction, About paragraphs, public contact details, locations, availability label, profile image path, and CV link. **Education** lets you add, edit, delete, and reorder education cards. The Projects, Skills, Experience, and Certifications pages manage those sections. Only publish details you have confirmed and want to make public.
 
 ### Add a photo
 
-Put your photo at **wwwroot/images/profile.jpg**. In Models/HomeViewModel.cs, change:
+Put your photo at **wwwroot/images/profile.jpg**, then enter `/images/profile.jpg` in Admin Dashboard → Profile → Profile image path. Leave the field blank to show your initials instead.
 
-```csharp
-public string ProfileImageUrl { get; set; } = "/images/profile.jpg";
-```
-
-Until then, the website displays your initials in a professional photo area. The image description automatically includes your name. Use a clear portrait with enough space around your face.
+The image description uses your current profile name. Use a clear portrait with enough space around your face.
 
 ### Add your CV
 
-Replace **wwwroot/documents/my-cv.pdf** with a public professional version of your CV, keeping the filename. Exclude identity, document and exam numbers, full home addresses, private records, and identity-document copies. Both Download CV links will then download your file. The existing file is a valid PDF clearly labeled as a placeholder.
+Add a public professional PDF under **wwwroot/documents/**, then enter its path (for example, `/documents/my-cv.pdf`) in Admin Dashboard → Profile → CV file path. Exclude identity, document and exam numbers, full home addresses, private records, and identity-document copies. Both Download CV links use this profile setting.
 
 ### Contact form and email setup
 
-The contact form validates submissions on the server and sends them through Resend. To enable delivery in a local PowerShell session, set the API token and a sender address verified with Resend before running the app:
+The contact form validates submissions on the server and sends them through Resend. It currently allows five submissions per detected client IP in each 15-minute window; further requests receive HTTP 429 with a retry message. A hidden honeypot field also silently discards basic bot submissions that fill it. This is a lightweight filter, not a substitute for CAPTCHA or a dedicated spam service if abuse continues. The rate limit is held in application memory and resets when the app restarts; it is intended for this local, single-instance project.
+
+To enable delivery in a local PowerShell session, set the API token and a sender address verified with Resend before running the app:
 
 ```powershell
 $env:RESEND_APITOKEN = "your-resend-api-token"
@@ -58,7 +49,7 @@ $env:Resend__FromEmail = "portfolio@your-verified-domain.example"
 dotnet run --launch-profile http
 ```
 
-Use your own verified sender address; the example domain will not send. Configure the same names as environment variables in your hosting provider for deployment. The API token is read from `RESEND_APITOKEN`, and the sender from `Resend__FromEmail`. The destination inbox is currently set in `Services/ResendEmailService.cs`. The form sends messages directly, so add rate limiting or equivalent abuse protection before exposing it publicly.
+Use your own verified sender address; the example domain will not send. The API token is read from `RESEND_APITOKEN`, and the sender from `Resend__FromEmail`. The destination inbox is currently set in `Services/ResendEmailService.cs`.
 
 ## What the important files do
 
@@ -66,11 +57,15 @@ MVC means Model, View, Controller: information, page design, and the code connec
 
 | File | What it does |
 | --- | --- |
-| Models/HomeViewModel.cs | Stores confirmed professional information and clearly marked placeholders and defines the shape of each card or timeline item. Start editing here. |
+| Models/HomeViewModel.cs | Combines database content for the public home page. |
+| Models/SiteProfile.cs | Defines the editable Home, About, and Contact profile data. |
+| Models/Education.cs | Defines each editable education card and its display order. |
 | Controllers/HomeController.cs | Loads portfolio records from SQLite and handles contact form submissions. |
-| Controllers/AdminController.cs | Protects the admin area and manages portfolio records. |
-| Data/DbSeeder.cs | Creates the initial admin account and role from configuration. |
+| Controllers/AdminController.cs | Protects the admin area and manages profile and portfolio records. |
+| Data/DbSeeder.cs | Creates the initial admin account and role, and seeds starting profile and education data. |
 | Views/Home/Index.cshtml | Builds all eight sections using the model. Loops repeat cards for each item. |
+| Views/Admin/Profile.cshtml | Edits the public profile, About text, contact details, and image/CV paths. |
+| Views/Admin/Education.cshtml | Adds, edits, deletes, and reorders education records. |
 | Views/Shared/_Layout.cshtml | Shares the navigation, page title, stylesheet, and footer across pages. |
 | wwwroot/css/site.css | Controls all colors, spacing, cards, responsive layouts, focus indicators, and reduced-motion behavior. |
 | wwwroot/js/site.js | Opens the mobile menu and highlights sections. |

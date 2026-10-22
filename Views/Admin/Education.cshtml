@@ -1,0 +1,84 @@
+@model IEnumerable<Education>
+@{
+    ViewData["Title"] = "Admin - Education";
+}
+
+<section class="section section-tinted admin-area" aria-labelledby="education-heading">
+    <div class="shell">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">PORTFOLIO / ADMIN</p>
+                <h1 id="education-heading">Education</h1>
+                <p class="hero-intro">Manage the education cards shown on your public portfolio.</p>
+            </div>
+        </div>
+
+        <section class="card" aria-labelledby="new-education-heading">
+            <h2 id="new-education-heading">Add education</h2>
+            <form asp-controller="Admin" asp-action="CreateEducation" method="post" class="admin-entry-form">
+                @Html.AntiForgeryToken()
+                <div class="field"><label for="new-education-qualification">Qualification</label><input id="new-education-qualification" name="Qualification" maxlength="200" required /></div>
+                <div class="field"><label for="new-education-institution">Institution</label><input id="new-education-institution" name="Institution" maxlength="200" required /></div>
+                <div class="field"><label for="new-education-dates">Dates</label><input id="new-education-dates" name="Dates" maxlength="100" placeholder="Completed: 2025" required /></div>
+                <div class="field"><label for="new-education-description">Description (optional)</label><textarea id="new-education-description" name="Description" rows="3" maxlength="2000"></textarea></div>
+                <div class="field"><label for="new-education-order">Display order</label><input id="new-education-order" name="DisplayOrder" type="number" value="1" min="0" required /><small>Lower numbers appear first.</small></div>
+                <button class="button button-primary" type="submit">Add education</button>
+            </form>
+        </section>
+
+        <section class="card" aria-labelledby="education-list-heading" style="margin-top:24px; overflow-x:auto">
+            <h2 id="education-list-heading">Existing education</h2>
+            <table class="admin-table" style="width:100%; border-collapse:collapse; text-align:left">
+                <thead>
+                    <tr>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Qualification</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Institution</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Dates</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Order</th>
+                        <th scope="col" style="padding:12px; border-bottom:1px solid var(--line)">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="5" style="padding:12px">No education entries have been added yet.</td></tr>
+                }
+                else
+                {
+                    @foreach (var education in Model)
+                    {
+                        <tr>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@education.Qualification</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@education.Institution</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@education.Dates</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">@education.DisplayOrder</td>
+                            <td style="padding:12px; border-bottom:1px solid var(--line)">
+                                <details>
+                                    <summary class="button button-outline">Edit</summary>
+                                    <form asp-controller="Admin" asp-action="EditEducation" method="post" class="card" style="min-width:280px; margin-top:10px">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@education.Id" />
+                                        <div class="field"><label for="education-qualification-@education.Id">Qualification</label><input id="education-qualification-@education.Id" name="Qualification" value="@education.Qualification" maxlength="200" required /></div>
+                                        <div class="field"><label for="education-institution-@education.Id">Institution</label><input id="education-institution-@education.Id" name="Institution" value="@education.Institution" maxlength="200" required /></div>
+                                        <div class="field"><label for="education-dates-@education.Id">Dates</label><input id="education-dates-@education.Id" name="Dates" value="@education.Dates" maxlength="100" required /></div>
+                                        <div class="field"><label for="education-description-@education.Id">Description</label><textarea id="education-description-@education.Id" name="Description" rows="3" maxlength="2000">@education.Description</textarea></div>
+                                        <div class="field"><label for="education-order-@education.Id">Display order</label><input id="education-order-@education.Id" name="DisplayOrder" type="number" value="@education.DisplayOrder" min="0" required /></div>
+                                        <button class="button button-primary" type="submit">Save changes</button>
+                                    </form>
+                                </details>
+                                <form asp-controller="Admin" asp-action="DeleteEducation" method="post" style="margin-top:8px">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@education.Id" />
+                                    <button class="button button-outline" type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </section>
+
+        <a class="text-link" asp-controller="Admin" asp-action="Index">&#8592; Back to Admin Dashboard</a>
+    </div>
+</section>

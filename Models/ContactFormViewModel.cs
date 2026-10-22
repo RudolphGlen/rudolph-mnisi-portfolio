@@ -6,6 +6,9 @@ namespace BeginnerMvc.Models;
 // Required also rejects values made entirely of spaces. Length limits bound input size.
 public class ContactFormViewModel
 {
+    // Honeypot spam trap: real visitors never see or fill this field.
+    public string Website { get; set; } = "";
+
     [Required(ErrorMessage = "Please enter your name.")]
     [StringLength(100, ErrorMessage = "Your name must be 100 characters or fewer.")]
     public string Name { get; set; } = "";

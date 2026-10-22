@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Identity;
 using BeginnerMvc.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using Resend;
 
 // Prepare the website and load its settings.
@@ -9,6 +11,32 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Enable MVC: controllers handle requests and views create pages.
 builder.Services.AddControllersWithViews();
+
+// Limit contact form submissions per client IP to reduce accidental or automated spam.
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("ContactForm", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(15),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    // Return a clear response and tell the browser when the client can try again.
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.Headers["Retry-After"] = "900";
+        context.HttpContext.Response.ContentType = "text/plain; charset=utf-8";
+        await context.HttpContext.Response.WriteAsync(
+            "Too many contact form submissions. Please try again in 15 minutes.",
+            cancellationToken);
+    };
+});
 
 // Read the database connection string from appsettings.json.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -64,6 +92,7 @@ if (!app.Environment.IsDevelopment())
 // Match incoming addresses to endpoints and register the public static assets.
 app.UseRouting();
 app.MapStaticAssets();
+app.UseRateLimiter();
 
 // Authenticate the request before authorization checks its access to the endpoint.
 app.UseAuthentication();

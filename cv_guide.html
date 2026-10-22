@@ -66,28 +66,30 @@
         <h1>Rudolph Glen Mnisi CV Website</h1>
         <h2>Project Architecture & Authentication Guide</h2>
        <p><strong>Author:</strong> Rudolph Glen Mnisi<br>
-           <strong>Date:</strong> October 13, 2026<br>
+           <strong>Created:</strong> October 13, 2026; <strong>Updated:</strong> October 22, 2026<br>
            <strong>Tech Stack:</strong> ASP.NET Core MVC (.NET 9), C#, Entity Framework Core, SQLite, Visual Studio Code</p>
+        <p><strong>Scope:</strong> This guide explains the portfolio app in its local development setup. Hosting will be covered separately as a lesson using a different project.</p>
         <h3>Page 1: System Architecture Overview</h3>
-        <p>Before implementing our database, the personal CV website operated purely on static views and a Resend contact form. To support a secure admin dashboard, we integrated <strong>ASP.NET Core Identity</strong> backed by a lightweight <strong>SQLite</strong> database.</p>
+        <p>The portfolio uses <strong>ASP.NET Core MVC</strong> for its pages and request handling. <strong>ASP.NET Core Identity</strong> manages admin sign-in, while <strong>SQLite</strong> stores Identity records and editable portfolio entries. Starting profile and education data are seeded into SQLite, then managed from the admin dashboard.</p>
 
         <div class="diagram">
-            [ Browser / Microsoft Edge ]<br>
+            [ Visitor or Admin Browser ]<br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼ (HTTP Request: /Admin/Login)<br>
-            [ Admin Controller ] ──(Verifies Password)──► [ SignInManager ]<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼ (Request to MVC route)<br>
+            [ Home / Admin Controller ] ──► [ Services and EF Core ]<br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>
-            [ SQLite app.db ] ◄──(Entity Framework Core)──┘
+            [ SQLite app.db ] ◄──(Entity Framework Core)──┘<br>
+            [ Admin Login ] ──► [ ASP.NET Core Identity ] ──► [ Auth Cookie ]
         </div>
 
         <p><strong>Core Components:</strong></p>
         <ul>
-            <li><strong>Admin Controller:</strong> Handles web requests for login and dashboard management.</li>
-            <li><strong>SignInManager:</strong> ASP.NET Core's built-in cryptographic security layer for validating credentials.</li>
-            <li><strong>SQLite (`app.db`):</strong> A serverless, self-contained database file storing encrypted user data locally.</li>
+            <li><strong>Controllers:</strong> The Home controller loads public portfolio records and processes contact messages; the Admin controller handles sign-in and portfolio management.</li>
+            <li><strong>ASP.NET Core Identity:</strong> Verifies passwords, stores password hashes, manages roles, and issues the authentication cookie.</li>
+            <li><strong>SQLite (`app.db`):</strong> A self-contained database storing Identity data and portfolio records. SQLite data is not encrypted by default; Identity hashes passwords rather than storing them as plain text.</li>
         </ul>
-        <div class="page-number">Page 1 of 4</div>
+        <div class="page-number">Page 1 of 5</div>
     </div>
 
     <!-- PAGE 2 -->
@@ -104,64 +106,101 @@
 }</pre>
 
         <h3>2. Database Context (`Data/ApplicationDbContext.cs`)</h3>
-        <p>The context inherits from `IdentityDbContext`, automatically provisioning tables for Users, Roles, Claims, and Logins.</p>
+        <p>The context inherits from <code>IdentityDbContext</code>, which provides Identity tables, and also exposes portfolio tables for Projects, Skills, Experiences, Certifications, Education, and the single editable Site Profile.</p>
         <pre>using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using BeginnerMvc.Models;
 
 namespace BeginnerMvc.Data
 {
     public class ApplicationDbContext : IdentityDbContext
     {
+        public DbSet&lt;Project&gt; Projects { get; set; }
+        public DbSet&lt;Skill&gt; Skills { get; set; }
+        public DbSet&lt;Experience&gt; Experiences { get; set; }
+        public DbSet&lt;Certification&gt; Certifications { get; set; }
+        public DbSet&lt;Education&gt; Education { get; set; }
+        public DbSet&lt;SiteProfile&gt; SiteProfiles { get; set; }
+
         public ApplicationDbContext(DbContextOptions&lt;ApplicationDbContext&gt; options)
             : base(options)
         {
         }
     }
 }</pre>
-        <p>Migrations were then applied using terminal commands (`dotnet ef migrations add` and `dotnet ef database update`), successfully compiling the local binary file `app.db`.</p>
-        <div class="page-number">Page 2 of 4</div>
+        <p>The migration files describe database structure changes. The app applies pending migrations automatically during startup with Entity Framework Core, then seeds the initial Admin account, profile, and education records when they are missing. The database file is data storage; it is not a compiled program binary.</p>
+        <div class="page-number">Page 2 of 5</div>
     </div>
 
     <!-- PAGE 3 -->
     <div class="page">
         <h1>Admin Credentials &amp; User Secrets</h1>
         <h3>Page 3: Keeping local credentials out of source files</h3>
-        <p>The Admin account seeder reads its email and password from application configuration at runtime. For local development, provide these values with <strong>.NET User Secrets</strong> using the <code>dotnet user-secrets</code> command.</p>
+        <p>The Admin account seeder reads its email and password from application configuration at runtime. For local development, provide these values with <strong>.NET User Secrets</strong> using the <code>dotnet user-secrets</code> command. The contact email service also reads its Resend API token and sender address from environment configuration.</p>
 
         <h3>Configuration keys</h3>
         <ul>
             <li><code>AdminSettings:Email</code></li>
             <li><code>AdminSettings:Password</code></li>
+            <li><code>RESEND_APITOKEN</code> (environment variable)</li>
+            <li><code>Resend:FromEmail</code> (set as <code>Resend__FromEmail</code> environment variable)</li>
         </ul>
-        <p>Use <code>dotnet user-secrets set</code> to set each key on your development machine. Keep the actual values out of C# code, HTML guides, settings files, and source control. User Secrets are for local development; use your hosting provider's protected settings for a deployed site.</p>
+        <p>Use <code>dotnet user-secrets set</code> to set each key on your development machine. Keep the actual values out of C# code, HTML guides, settings files, and source control. This guide covers local development; deployment configuration belongs to the separate hosting lesson.</p>
         <p>ASP.NET Core Identity hashes the password when it creates the account. The seeder needs the configured values only when it checks for or creates the initial Admin account.</p>
-        <div class="page-number">Page 3 of 4</div>
+        <div class="page-number">Page 3 of 5</div>
     </div>
 
     <!-- PAGE 4 -->
     <div class="page">
         <h1>Authentication & Future Roadmap</h1>
         <h3>Page 4: Login Verification & Next Steps</h3>
-        <p>When you log into your admin dashboard, the following sequence occurs:</p>
+        <p>When an admin signs in, Identity checks the submitted password against its stored hash, then issues an authentication cookie. Admin routes require membership in the <code>Admin</code> role.</p>
 
         <div class="diagram">
             Login Form Input ──► SignInManager ──► Matches Hashed Password in SQLite ──► Issues Auth Cookie ──► Admin Dashboard
         </div>
 
-        <h3>Current Authentication Setup:</h3>
+        <h3>Current Features:</h3>
         <ul>
-            <li>The Admin login uses ASP.NET Core Identity.</li>
-            <li>Admin credentials are read from configuration keys supplied with .NET User Secrets during local development, not embedded in code or HTML.</li>
-            <li>The seeder checks for the initial Admin account and creates it only when it is missing.</li>
+            <li>ASP.NET Core Identity handles sign-in and role-based admin authorization.</li>
+            <li>Five failed password attempts lock the account for five minutes.</li>
+            <li>Admin pages manage Projects, Skills, Experiences, Certifications, Education, and the public Site Profile.</li>
+            <li>The public home page reads these sections from SQLite. Profile settings control the Home, About, and Contact details, plus the photo and CV paths.</li>
+            <li>The contact form validates on the server and sends through Resend when its API token and verified sender are configured. The recipient address is currently set in <code>Services/ResendEmailService.cs</code>.</li>
+            <li>The startup seeder creates the Admin role and initial account when needed; local credentials belong in User Secrets and must not be committed to source control.</li>
         </ul>
 
-        <h3>Next Steps for Portfolio Development:</h3>
+        <div class="page-number">Page 4 of 5</div>
+    </div>
+
+    <!-- PAGE 5: Explain the contact-form spam checks in beginner-friendly terms. -->
+    <div class="page">
+        <h1>Contact Form Spam Protection</h1>
+        <h3>Page 5: What the rate limit and honeypot do</h3>
+        <p>The contact form has two lightweight checks. The rate limit slows repeated submissions from one detected IP address. The honeypot looks for basic bots that automatically fill every form field. Both checks run on the server.</p>
+
+        <h3>1. Rate limit: slow down repeated requests</h3>
+        <p>The app allows up to <strong>five POST requests per detected IP address in a 15-minute window</strong>. The sixth request in that window receives HTTP <code>429 Too Many Requests</code> and a message to try again later. The limit counts requests before the form is processed, including requests with missing or invalid form data.</p>
+        <p>This limit is stored in the running app's memory. Restarting the app resets it. The local check sent six empty requests: the first five returned HTTP 400 because they had no anti-forgery token, and the sixth returned HTTP 429. Those requests did not reach the contact action or send email. This confirmed the rate limit was working.</p>
+
+        <h3>2. Honeypot: catch basic form-filling bots</h3>
+        <p>A honeypot is a hidden input field used as a spam trap. This form includes an extra field named <code>Website</code>, positioned offscreen and removed from the keyboard and screen-reader flow. A real visitor does not see or fill it. Some simple bots scan a form and fill every field they find.</p>
+        <div class="diagram">
+            Visitor leaves hidden field blank ──► Normal validation ──► Resend sends the message<br>
+            Bot fills hidden field ──► Server recognizes the trap ──► Discard message without emailing
+        </div>
+        <p>If the hidden field contains text, the server quietly shows the normal success message but does not call Resend. This avoids telling a basic bot that it was detected. A more advanced bot can ignore the field, so the honeypot cannot stop every spammer.</p>
+
+        <h3>When to add stronger filtering</h3>
+        <p>The rate limit and honeypot are basic protections for this local project. If real abusive submissions continue, consider adding a CAPTCHA or a dedicated spam filtering service. CAPTCHA adds an extra step for visitors, so use it only if the lighter checks are not enough.</p>
+
+        <h3>Possible Next Steps:</h3>
         <ul>
-            <li>Secure admin controllers using the `[Authorize]` data annotation.</li>
-            <li>Build CRUD operations to manage public website projects, education, and skills dynamically from the dashboard.</li>
+            <li>Review the public profile and education details in the admin dashboard, then update the CV with confirmed information.</li>
+            <li>Keep this guide focused on local architecture and features; cover hosting in the separate lesson project.</li>
         </ul>
 
-        <div class="page-number">Page 4 of 4</div>
+        <div class="page-number">Page 5 of 5</div>
     </div>
 
 </body>
