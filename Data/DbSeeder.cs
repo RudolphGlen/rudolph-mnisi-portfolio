@@ -53,7 +53,8 @@ public static class DbSeeder
             {
                 UserName = adminEmail,
                 Email = adminEmail,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                LockoutEnabled = true
             };
 
             var result = await userManager.CreateAsync(adminUser, adminPassword);
@@ -61,6 +62,19 @@ public static class DbSeeder
             {
                 var errors = string.Join("; ", result.Errors.Select(error => error.Description));
                 throw new InvalidOperationException($"Could not create the admin user: {errors}");
+            }
+        }
+
+        // Existing admin accounts may predate lockout being enabled for new users.
+        // Enable it on the stored user so failed sign-ins are counted for this account too.
+        if (!adminUser.LockoutEnabled)
+        {
+            adminUser.LockoutEnabled = true;
+            var updateResult = await userManager.UpdateAsync(adminUser);
+            if (!updateResult.Succeeded)
+            {
+                var errors = string.Join("; ", updateResult.Errors.Select(error => error.Description));
+                throw new InvalidOperationException($"Could not enable admin account lockout: {errors}");
             }
         }
 

@@ -49,18 +49,23 @@ public class AdminController : Controller
 
         // SignInManager checks the password against Identity's stored password hash and
         // creates the authentication cookie when the credentials are valid.
+        // Count failed passwords so Identity can apply the configured account lockout.
         var result = await _signInManager.PasswordSignInAsync(
             identityUserName,
             password,
             isPersistent: false,
-            lockoutOnFailure: false);
+            lockoutOnFailure: true);
 
         if (result.Succeeded)
         {
             return RedirectToAction(nameof(Index));
         }
 
-        ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+        ModelState.AddModelError(
+            string.Empty,
+            result.IsLockedOut
+                ? "This account is temporarily locked after too many failed attempts. Please try again in five minutes."
+                : "Invalid login attempt.");
         return View();
     }
 
